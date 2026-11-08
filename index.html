@@ -1,0 +1,1033 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pretty Critical</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500..700;1,9..144,500..700&family=Figtree:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap">
+<style>
+/* Layout: same skeleton as the booking template (sticky bar + header, tinted hero, content bands, pink footer).
+   Pages are hash routes: #home (+ #podcast #campaigns #weekly-verdict #join anchors), #about, #faq.
+   Every colour comes from these tokens. Wireframe mode shows a separate phone viewer (#wf) instead of the site. */
+:root{
+  --pink:#E5007D;          /* hot pink: surfaces, buttons */
+  --pink-hover:#C4006C;
+  --pink-deep:#8F0050;     /* button shadow */
+  --pink-text:#C2006B;     /* pink for text on cream (AA) */
+  --cream:#FFF4E5;
+  --blush:#FFE2EE;         /* soft pink band */
+  --paper:#FFFBF5;
+  --ink:#2A0B1B;
+  --muted:#6A4A59;
+  --line:#F0D3D3;
+  --line-strong:#DDA9C0;
+  --on-pink:#FFFFFF;
+  --font-display:'Fraunces',Georgia,'Times New Roman',serif;
+  --font-body:'Figtree',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --bstyle:solid;
+  --r-card:20px;
+  --r-input:13px;
+  --r-pill:999px;
+  --shadow:0 20px 40px -24px rgba(143,0,80,.45);
+  --btn-shadow:0 3px 0 var(--pink-deep);
+  --bar-h:40px;
+  --head-h:72px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+body{margin:0;background:var(--cream);color:var(--ink);font:16px/1.55 var(--font-body);-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--pink);z-index:10}
+h1,h2,h3,h4{font-family:var(--font-display);margin:0;text-wrap:balance;color:var(--ink)}
+p{margin:0}
+button,input{font:inherit;color:inherit}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.on-pink :focus-visible,.topbar :focus-visible,footer.site :focus-visible{outline-color:#fff}
+.ic{width:1.15em;height:1.15em;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.band{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1088px;margin-inline:auto}
+[id]{scroll-margin-top:calc(var(--bar-h) + var(--head-h) + 12px)}
+
+/* ---------- sticky top ---------- */
+.site-top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20}
+.topbar{background:var(--pink);color:var(--on-pink);font-size:14px;height:var(--bar-h)}
+.topbar .wrap{height:100%;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.topbar .l,.topbar .r a{display:flex;align-items:center;gap:8px}
+.topbar a{text-decoration:none;font-weight:600}
+.topbar a:hover{text-decoration:underline}
+.head{background:var(--cream);border-bottom:1px var(--bstyle) var(--line);height:var(--head-h)}
+.head .wrap{height:100%;display:flex;align-items:center;gap:26px}
+.logo{display:flex;align-items:center;gap:12px;text-decoration:none;flex:none}
+.logo-mark{width:44px;height:44px;border-radius:50%;background:var(--pink);color:#fff;display:grid;place-items:center}
+.logo-mark .ic{width:23px;height:23px}
+.logo b{display:block;font:700 24px/1.05 var(--font-display);letter-spacing:-.01em;color:inherit}
+.logo small{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+nav.main{display:flex;gap:22px;margin-left:auto}
+nav.main a{font-weight:600;font-size:15px;text-decoration:none;padding:6px 0;border-bottom:2px solid transparent;white-space:nowrap}
+nav.main a:hover{border-color:var(--pink)}
+nav.main a[aria-current="page"]{border-color:var(--pink);color:var(--pink-text)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--pink);color:var(--on-pink);font-weight:700;border:0;border-radius:var(--r-pill);padding:12px 22px;cursor:pointer;text-decoration:none;box-shadow:var(--btn-shadow);white-space:nowrap;line-height:1.2}
+.btn:hover{background:var(--pink-hover)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn.cream{background:var(--cream);color:var(--ink);box-shadow:0 3px 0 rgba(42,11,27,.35)}
+.btn.cream:hover{background:#fff}
+.btn.big{padding:15px 28px;font-size:17px}
+.linkbtn{background:none;border:0;padding:0;font-weight:700;color:var(--pink-text);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.burger{display:none;background:none;border:2px var(--bstyle) var(--line-strong);border-radius:var(--r-input);width:44px;height:44px;place-items:center;cursor:pointer;margin-left:auto}
+.burger .ic{width:22px;height:22px}
+
+/* ---------- type helpers ---------- */
+.eyebrow{font-weight:700;font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--pink-text);margin-bottom:8px}
+.h2{font-size:clamp(28px,4vw,42px);line-height:1.1;font-weight:600;letter-spacing:-.02em}
+.body-l{font-size:18px;line-height:1.6;color:#44303b;max-width:560px;margin-top:16px}
+.ux{display:none;margin:0 0 16px;padding:10px 14px;border-left:4px solid #1f6feb;background:#e8f1ff;color:#0b2f66;border-radius:0 8px 8px 0;font-size:14px;line-height:1.45;max-width:720px}
+.ux::before{content:"UX note · ";font-weight:700}
+body.notes .ux{display:block}
+
+/* ---------- views ---------- */
+.view[hidden]{display:none}
+section.blk{padding-block:68px}
+section.blk.tint{background:var(--blush);border-block:1px var(--bstyle) var(--line)}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,440px);gap:56px;align-items:center}
+.two.top{align-items:start}
+
+/* hero */
+.hero{background:var(--blush);border-bottom:1px var(--bstyle) var(--line);padding-block:64px 68px}
+.hero .two{grid-template-columns:minmax(0,1fr) minmax(0,320px)}
+.hero h1{font-size:clamp(38px,6vw,68px);line-height:1.02;font-weight:600;letter-spacing:-.03em}
+.hero h1 em{font-style:italic;color:var(--pink-text);font-weight:500}
+.hero .sub{font-family:var(--font-display);font-size:clamp(19px,2.4vw,26px);margin-top:18px;color:var(--ink)}
+.hero .btn{margin-top:28px}
+.stickers{position:relative;height:250px}
+.sticker{position:absolute;padding:18px 26px;border-radius:var(--r-pill);font:600 clamp(24px,3vw,32px)/1 var(--font-display);letter-spacing:-.01em;white-space:nowrap}
+.sticker.a{background:var(--pink);color:#fff;top:20px;left:0;transform:rotate(-5deg);box-shadow:var(--btn-shadow)}
+.sticker.b{background:var(--paper);color:var(--ink);border:2px var(--bstyle) var(--ink);top:118px;right:0;transform:rotate(4deg);font-style:italic}
+
+/* cards */
+.card{background:var(--paper);border:1px var(--bstyle) var(--line);border-radius:var(--r-card);overflow:hidden;box-shadow:var(--shadow)}
+.card>header{background:var(--pink);color:var(--on-pink);padding:18px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.card>header h3{color:inherit;font-size:22px;font-weight:600}
+.card>header .tag{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.card .pad{padding:24px}
+
+/* episode card */
+.wave{display:flex;align-items:center;gap:3px;height:56px;margin:18px 0}
+.wave i{flex:1;background:var(--pink);border-radius:3px;min-width:2px}
+.ep h4{font-size:26px;font-weight:600;line-height:1.15;letter-spacing:-.01em}
+.ep p.d{margin-top:10px;color:#44303b}
+.ep .meta{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--pink-text);margin-bottom:6px}
+.ep .row{display:flex;align-items:center;gap:14px;margin-top:18px}
+.play{width:52px;height:52px;border-radius:50%;background:var(--pink);color:#fff;border:0;display:grid;place-items:center;cursor:pointer;box-shadow:var(--btn-shadow);flex:none}
+.play:hover{background:var(--pink-hover)}
+.play svg{width:22px;height:22px;fill:currentColor;stroke:none;margin-left:2px}
+
+/* anatomy of an ad */
+.lab{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:48px;margin-top:44px;align-items:start}
+.poster{position:relative;width:100%;max-width:380px;aspect-ratio:3/4;border-radius:var(--r-card);overflow:hidden;box-shadow:var(--shadow);border:1px var(--bstyle) var(--line-strong);background:var(--pink)}
+.poster svg.art{display:block;width:100%;height:100%}
+.poster text{font-family:var(--font-display)}
+.hot{position:absolute;left:var(--x);top:var(--y);width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;border:3px solid #fff;background:rgba(42,11,27,.55);color:#fff;font-weight:700;display:grid;place-items:center;cursor:pointer;padding:0}
+.hot::after{content:"";position:absolute;inset:-9px;border-radius:50%;border:2px solid #fff;opacity:.8;animation:ping 2.2s ease-out infinite}
+.hot:hover,.hot[aria-pressed="true"]{background:var(--ink);transform:scale(1.08)}
+.hot[aria-pressed="true"]::after{animation:none;opacity:0}
+@keyframes ping{0%{transform:scale(.8);opacity:.9}100%{transform:scale(1.35);opacity:0}}
+@media (prefers-reduced-motion:reduce){.hot::after{animation:none}}
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0 18px}
+.chip{background:var(--paper);border:2px var(--bstyle) var(--line);border-radius:var(--r-input);padding:10px 16px;font-weight:600;cursor:pointer}
+.chip:hover{border-color:var(--line-strong)}
+.chip[aria-pressed="true"]{background:var(--pink);border-color:var(--pink);border-style:solid;color:var(--on-pink)}
+.panel{background:var(--paper);border:2px var(--bstyle) var(--line);border-radius:var(--r-card);padding:24px;min-height:190px}
+.panel .q{font:600 22px/1.2 var(--font-display);letter-spacing:-.01em}
+.panel .a{margin-top:12px;font-size:17px;color:#44303b}
+.panel .who{margin-top:14px;font-size:14px;font-weight:700;color:var(--pink-text)}
+.panel .micro{color:var(--muted);font-size:17px}
+.panel .micro b{display:block;font:600 22px/1.2 var(--font-display);color:var(--ink);margin-bottom:8px}
+
+/* poll */
+.opt{position:relative;display:block;background:var(--paper);border:2px var(--bstyle) var(--line);border-radius:var(--r-input);padding:14px 16px 14px 50px;cursor:pointer;font-weight:600;margin-bottom:10px}
+.opt:hover{border-color:var(--line-strong)}
+.opt input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.opt .dot{position:absolute;left:16px;top:50%;margin-top:-11px;width:22px;height:22px;border-radius:50%;border:2px var(--bstyle) var(--line-strong);background:var(--paper)}
+.opt:has(input:checked){border-color:var(--pink);border-style:solid;background:#fff}
+.opt:has(input:checked) .dot{border-style:solid;border-color:var(--pink);background:radial-gradient(circle,#fff 0 3.5px,var(--pink) 4.5px)}
+.opt:has(input:focus-visible){outline:3px solid var(--ink);outline-offset:2px}
+.err{color:#B0003E;font-weight:600;font-size:14px;margin:0 0 10px}
+.q-poll{font:600 24px/1.2 var(--font-display);letter-spacing:-.01em;margin-bottom:16px}
+.results{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.results li{display:grid;gap:5px}
+.results .top{display:flex;justify-content:space-between;gap:10px;font-weight:600}
+.bar{height:14px;background:var(--blush);border-radius:var(--r-pill);overflow:hidden;border:1px var(--bstyle) var(--line)}
+.bar i{display:block;height:100%;background:var(--pink);border-radius:var(--r-pill)}
+.results .you{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--pink-text);margin-left:8px}
+.small{font-size:14px;color:var(--muted);margin-top:14px}
+
+/* join */
+section.join{background:var(--pink);color:var(--on-pink);padding-block:68px;text-align:left}
+section.join .h2,section.join .eyebrow{color:#fff}
+section.join .body-l{color:#fff}
+section.join .ux{background:#fff}
+
+/* about / faq */
+.pagehead{background:var(--blush);border-bottom:1px var(--bstyle) var(--line);padding-block:52px 48px}
+.pagehead h1{font-size:clamp(34px,5.4vw,58px);line-height:1.04;font-weight:600;letter-spacing:-.025em}
+.about p+p{margin-top:18px}
+.about .lead{font:500 clamp(20px,2.4vw,26px)/1.35 var(--font-display);letter-spacing:-.01em}
+.about p.t{font-size:18px;color:#44303b}
+.host{display:grid;gap:18px}
+.avatar{width:96px;height:96px;border-radius:50%;background:var(--blush);border:2px var(--bstyle) var(--pink);display:grid;place-items:center;font:600 42px var(--font-display);color:var(--pink-text)}
+.pull{font:500 italic clamp(22px,2.6vw,28px)/1.25 var(--font-display);letter-spacing:-.01em}
+.tagline{margin-top:48px;padding:26px 28px;border-radius:var(--r-card);background:var(--pink);color:#fff;display:flex;gap:18px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.tagline p{font:600 clamp(20px,2.4vw,26px)/1.2 var(--font-display);color:#fff}
+.faq{max-width:760px}
+.faq details{background:var(--paper);border:2px var(--bstyle) var(--line);border-radius:var(--r-card);margin-bottom:12px}
+.faq details[open]{border-color:var(--pink);border-style:solid}
+.faq summary{list-style:none;cursor:pointer;padding:18px 22px;font:600 20px/1.3 var(--font-display);display:flex;justify-content:space-between;gap:16px;align-items:center}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";font:600 28px/1 var(--font-body);color:var(--pink-text);flex:none}
+.faq details[open] summary::after{content:"−"}
+.faq summary:focus-visible{outline:3px solid var(--ink);outline-offset:2px;border-radius:var(--r-card)}
+.faq details p{padding:0 22px 20px;font-size:17px;color:#44303b}
+.faq details p a{font-weight:700;color:var(--pink-text)}
+
+/* ---------- footer ---------- */
+footer.site{background:var(--pink);color:var(--on-pink);padding-block:56px 110px}
+.fgrid{display:grid;grid-template-columns:1.3fr .8fr 1fr 1.2fr;gap:36px}
+.fgrid h4{margin:0 0 14px;font:700 13px var(--font-body);letter-spacing:.08em;text-transform:uppercase;color:#fff}
+.fgrid ul{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.fgrid a{text-decoration:none}
+.fgrid a:hover{text-decoration:underline}
+.fgrid .logo b,.fgrid .logo small{color:#fff}
+.fgrid .logo-mark{background:var(--cream);color:var(--pink)}
+.fgrid li{display:flex;gap:10px;align-items:flex-start}
+.fgrid li .ic{margin-top:3px}
+.fgrid .about-f{margin-top:18px;max-width:300px}
+.news h3{color:#fff;font-size:25px;font-weight:600;line-height:1.15;margin-bottom:14px}
+.news label{font-weight:700;display:block}
+.news .row{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+.input{width:100%;height:46px;background:#fff;border:2px var(--bstyle) var(--line);border-radius:var(--r-input);padding:0 14px;font-size:16px;color:var(--ink)}
+.news .input{flex:1 1 150px;min-width:0;width:auto}
+.news .ok{margin-top:10px;font-weight:600}
+.legal{border-top:1px var(--bstyle) rgba(255,255,255,.45);margin-top:44px;padding-top:26px;display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;font-size:14px}
+.legal a{text-decoration:underline}
+.legal .fiction{background:rgba(255,255,255,.16);border-radius:var(--r-input);padding:12px 16px;max-width:620px}
+
+/* ---------- floating controls ---------- */
+.fab{position:fixed;z-index:30;bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+.notes-btn{left:calc(16px + env(safe-area-inset-left,0px));background:#17191a;color:#fff;border:0;border-radius:var(--r-pill);padding:12px 20px;font-weight:700;display:flex;align-items:center;gap:10px;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.mode{right:calc(16px + env(safe-area-inset-right,0px));background:#fff;border:1px solid #ddd;border-radius:var(--r-pill);padding:4px;display:flex;gap:2px;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.mode button{border:0;background:none;padding:9px 16px;border-radius:var(--r-pill);font-weight:700;font-size:14px;cursor:pointer;color:#222}
+.mode button[aria-pressed="true"]{background:#17191a;color:#fff}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(76px + env(safe-area-inset-bottom,0px));background:#17191a;color:#fff;padding:10px 18px;border-radius:var(--r-pill);font-size:14px;z-index:40;max-width:calc(100% - 32px);text-align:center}
+.toast[hidden]{display:none}
+
+/* ---------- responsive ---------- */
+@media (max-width:1000px){
+  .two,.hero .two{grid-template-columns:minmax(0,1fr);gap:32px}
+  .lab{grid-template-columns:minmax(0,1fr);gap:28px}
+  .fgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .stickers{height:190px;max-width:380px}
+  .sticker.b{top:92px}
+}
+@media (max-width:940px){
+  nav.main{display:none;position:absolute;left:0;right:0;top:100%;background:var(--cream);border-bottom:1px var(--bstyle) var(--line);flex-direction:column;gap:0;margin:0;padding:8px max(16px,env(safe-area-inset-left,0px)) 14px}
+  nav.main.open{display:flex}
+  nav.main a{padding:12px 0;border-bottom:1px var(--bstyle) var(--line)}
+  .burger{display:grid}
+  .head .btn{display:none}
+}
+@media (max-width:720px){
+  :root{--bar-h:0px;--head-h:64px}
+  .topbar{display:none}
+  .logo b{font-size:21px}
+  .logo small{display:none}
+  section.blk,section.join{padding-block:44px}
+  .hero{padding-block:40px 44px}
+  .body-l{font-size:17px}
+}
+@media (max-width:560px){
+  .fgrid{grid-template-columns:minmax(0,1fr)}
+  .mode button{padding:9px 11px;font-size:13px}
+  .notes-btn{padding:11px 14px}
+  .panel,.card .pad{padding:18px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+[hidden]{display:none!important}
+
+/* ================= Wireframe viewer (shown instead of the site in Wireframe mode) ================= */
+#wf{display:none;--w-ink:#151515;--w-line:#bdbdbd;--w-fill:#f4f4f4;--w-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:var(--w-ink);min-height:100vh;background:#fafafa radial-gradient(#cfcfcf 1px,transparent 1.3px) 0 0/18px 18px}
+body[data-mode="wire"]{background:#fafafa}
+body[data-mode="wire"]::before{background:#fff}
+body[data-mode="wire"] #wf{display:block}
+body[data-mode="wire"] :is(.site-top,main,footer.site,.fab){display:none}
+#wf button{font-family:inherit}
+.wf-bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:#fff;border-bottom:1px solid #e2e2e2;display:flex;align-items:center;justify-content:space-between;gap:12px 24px;flex-wrap:wrap;padding:12px max(16px,env(safe-area-inset-right,0px)) 12px max(16px,env(safe-area-inset-left,0px))}
+.wf-title b{font-size:18px}
+.wf-title span{font-size:18px;color:#666}
+.wf-title small{display:block;font-size:13px;color:#666;margin-top:1px}
+.wf-ctrl{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+.wf-switch{position:relative;display:flex;align-items:center;gap:10px;font-weight:600;cursor:pointer}
+.wf-switch input{position:absolute;left:0;top:0;opacity:0;width:44px;height:24px;margin:0;cursor:pointer}
+.wf-switch .track{width:44px;height:24px;border-radius:99px;background:#d6d6d6;position:relative;flex:none}
+.wf-switch .track::after{content:"";position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.3);transition:transform .15s}
+.wf-switch input:checked+.track{background:var(--w-ink)}
+.wf-switch input:checked+.track::after{transform:translateX(20px)}
+.wf-switch input:focus-visible+.track{outline:3px solid #1f6feb;outline-offset:2px}
+.wf-pill{display:flex;border:1px solid #ddd;border-radius:99px;padding:3px;background:#fff}
+.wf-pill button{border:0;background:none;padding:9px 18px;border-radius:99px;font-weight:600;font-size:15px;cursor:pointer;color:var(--w-ink)}
+.wf-pill button[aria-pressed="true"]{background:var(--w-ink);color:#fff}
+.wf-grid{display:grid;grid-template-columns:minmax(200px,260px) minmax(0,492px) minmax(240px,400px);gap:40px;justify-content:center;align-items:start;padding:30px max(16px,env(safe-area-inset-right,0px)) 48px max(16px,env(safe-area-inset-left,0px))}
+.wf-label{font:600 11px/1 var(--w-mono);letter-spacing:.14em;text-transform:uppercase;color:#666;margin:0 0 14px}
+.wf-pages{list-style:none;margin:0 0 34px;padding:0;display:grid;gap:2px}
+.wf-pages button{width:100%;text-align:left;border:0;background:none;padding:11px 12px;border-radius:7px;cursor:pointer;font-size:15px;color:var(--w-ink)}
+.wf-pages button:hover{background:#ececec}
+.wf-pages button[aria-current="page"]{background:var(--w-ink);color:#fff;font-weight:700}
+.wf-pages .sub button{padding-left:32px}
+.key{display:grid;gap:14px}
+.key div{display:flex;align-items:center;gap:16px;font-size:15px}
+.key .sw{width:50px;flex:none;display:grid;gap:5px}
+.key .sw.x{height:36px;border:1px solid var(--w-line);background:linear-gradient(to top right,transparent calc(50% - .6px),#aaa 50%,transparent calc(50% + .6px)),linear-gradient(to bottom right,transparent calc(50% - .6px),#aaa 50%,transparent calc(50% + .6px)),var(--w-fill)}
+.key .sw i{display:block;height:7px;border-radius:5px;background:#dcdcdc}
+.key .sw i+i{width:60%}
+.key .sw.b1{height:26px;background:var(--w-ink);border-radius:4px}
+.key .sw.b2{height:26px;border:2px solid var(--w-ink);border-radius:4px;background:#fff}
+.n{width:26px;height:26px;border-radius:50%;background:var(--w-ink,#151515);color:#fff;font:700 13px/26px system-ui,sans-serif;text-align:center;flex:none;display:inline-block}
+
+/* phone */
+.wf-center{display:flex;justify-content:center}
+.phone{width:min(492px,100%);background:var(--w-ink);border-radius:56px;padding:12px;box-shadow:0 30px 60px -30px rgba(0,0,0,.5)}
+.ph-in{background:#fff;border-radius:44px;overflow:hidden;height:clamp(560px,calc(100vh - 150px),764px);display:flex;flex-direction:column}
+.ph-status{display:flex;justify-content:space-between;align-items:center;padding:14px 28px 4px;font-size:14px;font-weight:600;flex:none}
+.ph-icons{display:flex;gap:6px;align-items:center}
+.ph-head{display:flex;align-items:center;gap:10px;padding:10px 20px 14px;border-bottom:2px solid var(--w-ink);flex:none}
+.ph-logo{width:40px;height:40px;border:1px solid #888;display:grid;place-items:center;font:8px var(--w-mono);color:#555;flex:none;background:var(--w-fill);letter-spacing:.04em}
+.ph-head b{font-size:18px;white-space:nowrap}
+.ph-head .sp{flex:1;min-width:0}
+.ph-menu{display:none;flex:none;border-bottom:2px solid var(--w-ink);padding:2px 20px 8px;background:#fff}
+.ph-menu.open{display:block}
+.ph-menu button{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid #ddd;background:none;padding:13px 0;font-size:17px;font-weight:600;cursor:pointer;color:var(--w-ink)}
+.ph-menu button:last-child{border-bottom:0}
+.ph-screen{flex:1;min-height:0;overflow-y:auto;position:relative;overscroll-behavior:contain}
+.ph-home{flex:none;height:5px;width:140px;background:var(--w-ink);border-radius:9px;margin:10px auto 8px}
+.wf-page[hidden]{display:none}
+
+/* wireframe building blocks */
+.wf-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:var(--w-ink);color:#fff;border:2px solid var(--w-ink);border-radius:8px;padding:15px 16px;font-weight:700;font-size:17px;cursor:default;line-height:1.2}
+.wf-btn.two{background:#fff;color:var(--w-ink)}
+.wf-btn.sm{width:auto;padding:10px 14px;font-size:14px;white-space:nowrap}
+.wf-sec{position:relative;padding:24px 20px;border-bottom:1px solid #ddd}
+#wf.ann .wf-sec{padding-left:46px}
+.wf-sec>.wf-n{display:none;position:absolute;left:10px;top:24px}
+#wf.ann .wf-sec>.wf-n{display:inline-block}
+.wf-eye{font:11px/1.3 var(--w-mono);letter-spacing:.12em;text-transform:uppercase;color:#555;margin:0 0 10px}
+.wf-h1{font:700 30px/1.15 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;letter-spacing:-.01em;margin:0 0 12px;color:var(--w-ink)}
+.wf-h2{font:700 24px/1.2 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;letter-spacing:-.01em;margin:0 0 14px;color:var(--w-ink)}
+.wf-sub{font-size:17px;margin:0 0 18px;color:#333}
+.wf-lines{margin:0 0 18px}
+.wf-lines i{display:block;height:10px;border-radius:6px;background:#e4e4e4;margin-bottom:8px}
+.wf-lines i:last-child{width:58%}
+.wf-micro{font:11px/1.4 var(--w-mono);letter-spacing:.04em;color:#555;margin:12px 0 0}
+.wf-img{position:relative;height:var(--h,200px);border:1px solid var(--w-line);background:linear-gradient(to top right,transparent calc(50% - .6px),#b5b5b5 50%,transparent calc(50% + .6px)),linear-gradient(to bottom right,transparent calc(50% - .6px),#b5b5b5 50%,transparent calc(50% + .6px)),var(--w-fill);display:grid;place-items:center;text-align:center;margin:0 0 18px}
+.wf-img>span{display:flex;flex-direction:column;align-items:center;gap:7px;background:var(--w-fill);padding:3px 8px;font:10.5px/1.3 var(--w-mono);letter-spacing:.08em;text-transform:uppercase;color:#555;max-width:80%}
+.wf-img svg{width:22px;height:22px;fill:none;stroke:#444;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.wf-hot{position:absolute;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;border:2px solid var(--w-ink);background:#fff;font:700 13px/26px system-ui,sans-serif;text-align:center;color:var(--w-ink);font-style:normal}
+.wf-box{border:1px solid var(--w-line);border-radius:10px;padding:16px;margin:0 0 18px;background:#fff}
+.wf-box b{display:block;font-size:19px;margin-bottom:10px;line-height:1.25}
+.wf-row{display:flex;align-items:center;gap:12px;border:1.5px solid var(--w-ink);border-radius:8px;padding:14px 16px;margin-bottom:10px;font-weight:600;background:#fff}
+.wf-row .r{width:18px;height:18px;border-radius:50%;border:2px solid var(--w-ink);flex:none}
+.wf-row .go{margin-left:auto;font-weight:400}
+.wf-gap{height:14px}
+.wf-links{list-style:none;margin:0 0 18px;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;font-size:15px;text-decoration:underline;text-underline-offset:3px}
+.wf-field{height:46px;border:1.5px solid var(--w-ink);border-radius:8px;margin-bottom:10px;display:flex;align-items:center;padding:0 14px;font:11px var(--w-mono);color:#777;letter-spacing:.06em;text-transform:uppercase}
+.wf-foot .wf-logo{display:flex;align-items:center;gap:10px;margin-bottom:14px;font-weight:700;font-size:18px}
+.wf-foot{background:#f7f7f7}
+.wf-faq details{border:1.5px solid var(--w-ink);border-radius:8px;margin-bottom:10px;background:#fff}
+.wf-faq summary{list-style:none;cursor:pointer;padding:14px 16px;font-weight:700;font-size:16px;display:flex;justify-content:space-between;gap:12px;line-height:1.3}
+.wf-faq summary::-webkit-details-marker{display:none}
+.wf-faq summary::after{content:"+";font-size:22px;line-height:1;flex:none}
+.wf-faq details[open] summary::after{content:"−"}
+.wf-faq details .wf-lines{padding:0 16px;margin:0 0 16px}
+
+/* annotations panel */
+.wf-right h2{font:700 26px/1.2 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;margin:0 0 16px;color:var(--w-ink)}
+.wf-card{border:1px dashed #9a9a9a;border-radius:10px;padding:20px 22px;background:#fff;color:#444;line-height:1.5}
+.wf-card .wf-btn{width:auto;display:inline-flex;margin-top:14px;padding:12px 18px;font-size:15px;cursor:pointer}
+.wf-notes{list-style:none;margin:16px 0 0;padding:0;display:grid;gap:12px}
+.wf-notes li{display:grid;grid-template-columns:28px minmax(0,1fr);gap:12px;background:#fff;border:1px solid #ddd;border-radius:10px;padding:14px 16px}
+.wf-notes b{display:block}
+.wf-notes p{margin:4px 0 0;color:#444;font-size:15px;line-height:1.45}
+
+@media (max-width:1180px){
+  .wf-grid{grid-template-columns:minmax(0,492px);gap:28px}
+  .wf-left{order:1}.wf-center{order:2}.wf-right{order:3}
+  .wf-pages{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));margin-bottom:24px}
+  .wf-pages .sub button{padding-left:12px}
+}
+@media (max-width:540px){
+  .phone{border-radius:40px;padding:8px}
+  .ph-in{border-radius:32px}
+  .ph-head{padding-inline:14px;gap:8px}
+  .ph-head b{font-size:16px}
+  .wf-sec{padding-inline:16px}
+  .wf-pill button{padding:9px 12px;font-size:14px}
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3M9 21h6"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.8"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 20l1.3-3.7A8.2 8.2 0 1 1 8.5 19z"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></symbol>
+  <symbol id="i-headphones" viewBox="0 0 24 24"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4" height="7" rx="1.5"/><rect x="17" y="14" width="4" height="7" rx="1.5"/></symbol>
+</svg>
+
+<div class="site-top">
+  <div class="topbar band">
+    <div class="wrap">
+      <div class="l"><svg class="ic"><use href="#i-headphones"/></svg><span>A new episode every week · Beauty, branding, feminism</span></div>
+      <div class="r"><a href="#" data-link="discord"><svg class="ic"><use href="#i-chat"/></svg>Join our Discord</a></div>
+    </div>
+  </div>
+  <div class="head band">
+    <div class="wrap">
+      <a class="logo" href="#home"><span class="logo-mark"><svg class="ic"><use href="#i-mic"/></svg></span><span><b>Pretty Critical</b><small>Beauty. Branding. Feminism.</small></span></a>
+      <nav class="main" id="nav" aria-label="Main">
+        <a href="#home" data-nav="home">Home</a>
+        <a href="#podcast" data-nav="podcast">Podcast</a>
+        <a href="#campaigns" data-nav="campaigns">Campaigns</a>
+        <a href="#weekly-verdict" data-nav="weekly-verdict">Weekly Verdict</a>
+        <a href="#about" data-nav="about">About</a>
+        <a href="#faq" data-nav="faq">FAQ</a>
+      </nav>
+      <a class="btn" href="#" data-link="podcast">Listen now</a>
+      <button class="burger" id="burger" aria-expanded="false" aria-controls="nav" aria-label="Menu"><svg class="ic"><use href="#i-menu"/></svg></button>
+    </div>
+  </div>
+</div>
+
+<main>
+<!-- ======================= HOME ======================= -->
+<div class="view" id="view-home">
+
+  <section class="hero band" id="home">
+    <div class="wrap">
+      <p class="ux">Menu rationale. Home: introduces the website and its main activities. Podcast: access to the primary content. Campaigns: interactive advertising analysis. Weekly Verdict: polls and audience participation. About: the creator and the mission. FAQ: common visitor questions.</p>
+      <p class="ux">Audience: Gen Z and young adults (18–25) who know popular campaigns but not terms like "femvertising". Tone: thought-provoking, relatable, witty. The hero introduces the main question of the site and uses a conversational tagline to set the host's personality. Primary call to action: listen to the podcast.</p>
+      <div class="two">
+        <div>
+          <p class="eyebrow">The podcast about beauty and brands</p>
+          <h1>Is Beauty Empowerment — or Just <em>Marketing?</em></h1>
+          <p class="sub">Beauty. Branding. Feminism. Let's talk about it.</p>
+          <a class="btn big" href="#" data-link="podcast">Listen to Pretty Critical →</a>
+        </div>
+        <div class="stickers" aria-hidden="true"><span class="sticker a">Empowerment?</span><span class="sticker b">Marketing?</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="blk band" id="podcast">
+    <div class="wrap two">
+      <div>
+        <p class="eyebrow">The Podcast</p>
+        <h2 class="h2">Listen. Question. Rethink.</h2>
+        <p class="body-l">Welcome to Pretty Critical, where we talk beauty, feminism, and everything brands want us to believe. Each episode unpacks the stories behind the ads — and the messages they leave us with.</p>
+        <a class="btn big" style="margin-top:26px" href="#" data-link="podcast">Listen to the Latest Episode →</a>
+      </div>
+      <div class="card ep">
+        <header><h3>Latest episode</h3><span class="tag">Suggested</span></header>
+        <div class="pad">
+          <p class="meta">Episode title</p>
+          <h4>The plastic feminism of Barbie</h4>
+          <div class="wave" aria-hidden="true" id="wave"></div>
+          <p class="d">Is Barbie feminism serving women or just looking pretty in pink? Let's unpack the plastic perfection, girl-power slogans, and corporate feminism behind Barbie's empowerment story. Because even feminism comes with a price tag.</p>
+          <div class="row"><button class="play" type="button" data-link="podcast" aria-label="Play the latest episode"><svg viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z"/></svg></button><span style="font-weight:600">Play the latest episode</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="blk tint band" id="campaigns">
+    <div class="wrap">
+      <div style="max-width:700px">
+        <p class="eyebrow">Anatomy of an Ad</p>
+        <h2 class="h2">Look beyond the message. Decode the meaning.</h2>
+        <p class="body-l" style="max-width:none">Ever wondered why an ad makes you feel a certain way? Explore interactive breakdowns of beauty campaigns to uncover their visual strategies, emotional appeals, and feminist narratives. Let's see what happens when empowerment meets commercial persuasion.</p>
+        <button class="btn big" style="margin-top:26px" type="button" id="decode">Decode This Campaign →</button>
+      </div>
+
+      <div class="lab" id="lab">
+        <div>
+          <div class="poster" id="poster">
+            <svg class="art" viewBox="0 0 300 400" role="img" aria-label="A fictional cosmetics poster: a smiling model, a lipstick, and the slogan Be Bold.">
+              <defs><linearGradient id="pg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF8CC0"/><stop offset="1" stop-color="#E5007D"/></linearGradient></defs>
+              <rect width="300" height="400" fill="url(#pg)"/>
+              <circle cx="245" cy="60" r="96" fill="#FFB3D5" opacity=".45"/>
+              <circle cx="20" cy="250" r="70" fill="#FFB3D5" opacity=".3"/>
+              <text x="18" y="30" font-size="15" font-weight="700" fill="#FFF4E5" letter-spacing="2">GLOW CO.</text>
+              <path d="M62 292 C62 238 106 208 150 208 C194 208 238 238 238 292Z" fill="#FFF4E5"/>
+              <rect x="136" y="170" width="28" height="44" fill="#F2C3A2"/>
+              <circle cx="150" cy="138" r="46" fill="#F7CFAF"/>
+              <path d="M102 138 C96 82 204 82 198 138 C190 112 112 112 102 138Z" fill="#2A0B1B"/>
+              <path d="M97 140 C92 190 112 196 118 176 L110 140Z" fill="#2A0B1B"/>
+              <path d="M203 140 C208 190 188 196 182 176 L190 140Z" fill="#2A0B1B"/>
+              <path d="M133 156 Q150 172 167 156 Q150 163 133 156Z" fill="#B3004F"/>
+              <path d="M130 130 q7 -5 14 0M156 130 q7 -5 14 0" stroke="#2A0B1B" stroke-width="3" fill="none" stroke-linecap="round"/>
+              <g transform="translate(226 196) rotate(10)"><rect x="0" y="44" width="24" height="56" rx="4" fill="#2A0B1B"/><rect x="3" y="12" width="18" height="34" fill="#E5007D"/><path d="M3 12 L21 2 L21 12Z" fill="#E5007D"/></g>
+              <rect y="292" width="300" height="108" fill="#2A0B1B"/>
+              <text x="20" y="338" font-size="40" font-weight="700" fill="#FFF4E5">BE BOLD.</text>
+              <text x="20" y="364" font-size="20" font-style="italic" fill="#FF8CC0">Be you.</text>
+              <text x="20" y="386" font-size="12" fill="#FFF4E5" letter-spacing="1">SHADE 04 · ROSEWATER RED · $38</text>
+            </svg>
+                        <button class="hot" type="button" data-spot="rep"  style="--x:50%;--y:35%" aria-label="Hotspot 1: Representation">1</button>
+            <button class="hot" type="button" data-spot="vis"  style="--x:16%;--y:52%" aria-label="Hotspot 2: Visual choices">2</button>
+            <button class="hot" type="button" data-spot="lang" style="--x:50%;--y:85%" aria-label="Hotspot 3: Language">3</button>
+            <button class="hot" type="button" data-spot="brand" style="--x:81%;--y:60%" aria-label="Hotspot 4: Brand connection">4</button>
+          </div>
+          <p class="small">Sample ad for the demo. Swap in your own campaign image.</p>
+        </div>
+        <div>
+          <p class="ux">For a mobile design, use "Tap" rather than "Hover", since hovering is not a reliable interaction on touchscreens. The numbered buttons below do the same job as the dots on the poster, for keyboard and screen-reader users.</p>
+          <p class="eyebrow">Interactive feature</p>
+          <div class="chips" id="spot-chips" role="group" aria-label="Details to unpack"></div>
+          <div class="panel" id="panel" aria-live="polite"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="blk band" id="weekly-verdict">
+    <div class="wrap two top">
+      <div>
+        <p class="eyebrow">The Weekly Verdict</p>
+        <h2 class="h2">Empowerment or Exploitation? You decide.</h2>
+        <p class="body-l">You've heard the episode. You've seen the campaign. Now what do you think? Does this brand genuinely challenge gender stereotypes, or does it turn feminist ideals into a marketing strategy? Cast your vote and see how other listeners interpret the message.</p>
+        <p class="ux" style="margin-top:18px">Why these options work: the poll asks visitors to interpret the campaign rather than equating empowerment with buying and exploitation with boycotting. A campaign's message and a consumer's purchasing decision are separate questions.</p>
+      </div>
+      <div class="card" id="poll-card">
+        <header><h3>This week's poll</h3><span class="tag">Weekly Verdict</span></header>
+        <div class="pad">
+          <form id="poll" novalidate>
+            <p class="q-poll" id="poll-q">How would you interpret this campaign's feminist message?</p>
+            <div role="radiogroup" aria-labelledby="poll-q" id="poll-opts"></div>
+            <p class="err" id="poll-err" role="alert" hidden>Pick an option to cast your vote.</p>
+            <button class="btn big" type="submit" style="width:100%;margin-top:6px">Cast Your Vote →</button>
+          </form>
+          <div id="poll-res" hidden>
+            <p class="q-poll">How listeners read this campaign</p>
+            <ul class="results" id="res-list"></ul>
+            <p class="small" id="res-total"></p>
+            <p class="small">These are sample results for the demo. Connect a real poll to show live votes.</p>
+            <p style="margin-top:14px"><button class="linkbtn" type="button" id="revote">Back to the poll</button></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="join band on-pink" id="join">
+    <div class="wrap">
+      <p class="ux">This block is optional. The first three content blocks already meet the checklist requirement of three or more homepage blocks.</p>
+      <p class="eyebrow">Join the Conversation</p>
+      <h2 class="h2">Your take. Your voice. Your verdict.</h2>
+      <p class="body-l">Feminism, beauty, and branding are never just black and white. Share your perspective, challenge an assumption, or join the conversation with other Pretty Critical listeners.</p>
+      <a class="btn cream big" style="margin-top:26px" href="#" data-link="discord">Join our Discord →</a>
+    </div>
+  </section>
+</div>
+
+<!-- ======================= ABOUT ======================= -->
+<div class="view" id="view-about" hidden>
+  <section class="pagehead band">
+    <div class="wrap">
+      <p class="eyebrow">About</p>
+      <h1>About Pretty Critical</h1>
+    </div>
+  </section>
+  <section class="blk band">
+    <div class="wrap two top">
+      <div class="about">
+        <p class="lead">Hosted by Grace — a beauty and lifestyle influencer, Pretty Critical looks beyond the glossy visuals and empowering slogans to ask a bigger question: when brands speak about feminism, are they challenging gender expectations or turning empowerment into another product to sell?</p>
+        <p class="t">Through candid podcast conversations, interactive campaign breakdowns, and community discussions, we make media criticism accessible to everyday consumers.</p>
+        <p class="t">We are not here to tell you what to buy or which brands to cancel. We are here to ask questions, unpack the messages, and encourage you to think critically.</p>
+      </div>
+      <div class="card">
+        <div class="pad host">
+          <div class="avatar" aria-hidden="true">G</div>
+          <div><h3 style="font-size:26px;font-weight:600">Grace</h3><p style="color:var(--muted)">Host · beauty and lifestyle influencer</p></div>
+          <p class="pull">"Not here to tell you what to buy or which brands to cancel."</p>
+          <p class="small" style="margin:0">Host photo goes here.</p>
+        </div>
+      </div>
+    </div>
+    <div class="wrap">
+      <div class="tagline on-pink">
+        <p>Pretty Critical. Beauty. Branding. Feminism. Let's talk about it.</p>
+        <a class="btn cream" href="#" data-link="podcast">Listen to Pretty Critical →</a>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ======================= FAQ ======================= -->
+<div class="view" id="view-faq" hidden>
+  <section class="pagehead band">
+    <div class="wrap">
+      <p class="eyebrow">FAQ</p>
+      <h1>Frequently Asked Questions</h1>
+    </div>
+  </section>
+  <section class="blk band">
+    <div class="wrap faq">
+      <details open><summary>What exactly is Pretty Critical?</summary><p>Pretty Critical is an independent podcast and media platform exploring beauty culture, feminism, and brand communication through conversations, campaign analysis, and audience participation.</p></details>
+      <details><summary>What do you mean by feminist advertising?</summary><p>Feminist advertising uses messages about women's equality, independence, empowerment, or challenging gender stereotypes to communicate with audiences.</p></details>
+      <details><summary>Are you against beauty brands or buying beauty products?</summary><p>Not at all. We do not automatically support or reject brands. We examine how they communicate feminist ideas and encourage audiences to make their own informed judgments.</p></details>
+      <details><summary>How do you decide whether a campaign is empowering or exploitative?</summary><p>We look at representation, visual choices, language, campaign context, and how the feminist message connects to the brand or product. We consider different interpretations rather than assuming every campaign has the same intention.</p></details>
+      <details><summary>Can I participate in the Weekly Verdict?</summary><p>Yes! Listen to the episode, explore the campaign, and cast your vote. You can also compare your interpretation with other listeners' perspectives. <a href="#weekly-verdict">Go to the Weekly Verdict →</a></p></details>
+    </div>
+  </section>
+</div>
+</main>
+
+<footer class="site band">
+  <div class="wrap">
+    <div class="fgrid">
+      <div>
+        <a class="logo" href="#home"><span class="logo-mark"><svg class="ic"><use href="#i-mic"/></svg></span><span><b>Pretty Critical</b><small>Beauty. Branding. Feminism.</small></span></a>
+        <p class="about-f">Let's talk about it. A podcast that asks whether beauty is empowerment or just marketing.</p>
+      </div>
+      <div>
+        <h4>Site</h4>
+        <ul>
+          <li><a href="#home">Home</a></li>
+          <li><a href="#podcast">Podcast</a></li>
+          <li><a href="#campaigns">Campaigns</a></li>
+          <li><a href="#weekly-verdict">Weekly Verdict</a></li>
+          <li><a href="#about">About</a></li>
+          <li><a href="#faq">FAQ</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Join in</h4>
+        <ul>
+          <li><svg class="ic"><use href="#i-headphones"/></svg><a href="#" data-link="podcast">Listen to the podcast</a></li>
+          <li><svg class="ic"><use href="#i-chat"/></svg><a href="#" data-link="discord">Our Discord</a></li>
+          <li><svg class="ic"><use href="#i-mail"/></svg><span style="overflow-wrap:anywhere">hello@prettycritical.example</span></li>
+        </ul>
+      </div>
+      <form class="news" id="news" novalidate>
+        <h3>Get the verdict in your inbox</h3>
+        <label for="news-email">Email address</label>
+        <p style="font-size:15px">One email a week with the new episode and poll.</p>
+        <div class="row">
+          <input class="input" id="news-email" type="email" autocomplete="email" inputmode="email">
+          <button class="btn cream" type="submit">Subscribe</button>
+        </div>
+        <p class="ok" id="news-msg" role="status" hidden></p>
+      </form>
+    </div>
+    <div class="legal">
+      <p>© 2026 Pretty Critical · <a href="#faq">FAQ</a></p>
+      <p class="fiction">Concept website for a class exercise. The campaign shown is fictional.</p>
+    </div>
+  </div>
+</footer>
+
+<button class="fab notes-btn" id="notes-btn" aria-pressed="false"><svg class="ic"><use href="#i-eye"/></svg><span id="notes-label">Show UX notes</span></button>
+<div class="fab mode" role="group" aria-label="Design mode">
+  <button type="button" data-mode="wire" aria-pressed="false">Wireframe</button>
+  <button type="button" data-mode="final" aria-pressed="true">Final design</button>
+</div>
+<div id="wf">
+  <div class="wf-bar">
+    <div class="wf-title"><b>Pretty Critical</b><span> · Mobile wireframe</span><small>Concept site: every page as a phone layout, using boxes and labels only</small></div>
+    <div class="wf-ctrl">
+      <label class="wf-switch"><input type="checkbox" id="wf-ann-toggle"><span class="track"></span>Annotations</label>
+      <div class="wf-pill" role="group" aria-label="Design mode"><button type="button" data-mode="wire" aria-pressed="true">Wireframe</button><button type="button" data-mode="final" aria-pressed="false">Final design</button></div>
+    </div>
+  </div>
+  <div class="wf-grid">
+    <aside class="wf-left">
+      <p class="wf-label">Pages</p>
+      <ul class="wf-pages" id="wf-pages">
+        <li><button type="button" data-go="home">Home</button></li>
+        <li class="sub"><button type="button" data-go="podcast">Podcast</button></li>
+        <li class="sub"><button type="button" data-go="campaigns">Campaigns</button></li>
+        <li class="sub"><button type="button" data-go="weekly-verdict">Weekly Verdict</button></li>
+        <li><button type="button" data-go="about">About</button></li>
+        <li><button type="button" data-go="faq">FAQ</button></li>
+      </ul>
+      <p class="wf-label">Key</p>
+      <div class="key">
+        <div><span class="sw x"></span>Image or map</div>
+        <div><span class="sw"><i></i><i></i></span>Body text</div>
+        <div><span class="sw b1"></span>Main action</div>
+        <div><span class="sw b2"></span>Secondary action</div>
+        <div><span class="sw"><span class="n">1</span></span>Annotation</div>
+      </div>
+    </aside>
+
+    <div class="wf-center">
+      <div class="phone">
+        <div class="ph-in">
+          <div class="ph-status"><span>9:41</span><span class="ph-icons" aria-hidden="true">
+            <svg width="18" height="12" viewBox="0 0 18 12"><path d="M2 11V8M6 11V6M10 11V4M14 11V1" stroke="#151515" stroke-width="2" stroke-linecap="round"/></svg>
+            <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="#151515" stroke-width="1.8" stroke-linecap="round"><path d="M1.5 4.2a9 9 0 0 1 13 0M4 7a5.5 5.5 0 0 1 8 0"/><circle cx="8" cy="10" r=".9" fill="#151515"/></svg>
+            <svg width="24" height="12" viewBox="0 0 24 12" fill="none"><rect x=".8" y=".8" width="19" height="10.4" rx="3" stroke="#151515" stroke-width="1.6"/><rect x="3" y="3" width="12" height="6" rx="1.5" fill="#151515"/><path d="M22 4v4" stroke="#151515" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </span></div>
+          <div class="ph-head">
+            <span class="ph-logo">LOGO</span><b>Pretty Critical</b><span class="sp"></span>
+            <span class="wf-btn sm" role="presentation">Listen now</span>
+            <button type="button" class="wf-btn sm two" id="ph-menu-btn" aria-expanded="false" aria-controls="ph-menu" style="cursor:pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>Menu</button>
+          </div>
+          <nav class="ph-menu" id="ph-menu" aria-label="Wireframe menu">
+            <button type="button" data-go="home">Home</button>
+            <button type="button" data-go="podcast">Podcast</button>
+            <button type="button" data-go="campaigns">Campaigns</button>
+            <button type="button" data-go="weekly-verdict">Weekly Verdict</button>
+            <button type="button" data-go="about">About</button>
+            <button type="button" data-go="faq">FAQ</button>
+          </nav>
+
+          <div class="ph-screen" id="wf-screen" tabindex="0" aria-label="Wireframe page preview">
+
+            <!-- HOME -->
+            <div class="wf-page" data-page="home">
+              <section class="wf-sec" id="wf-b-home"><span class="n wf-n">1</span>
+                <p class="wf-eye">Podcast about beauty and brands</p>
+                <h1 class="wf-h1">Is Beauty Empowerment — or Just Marketing?</h1>
+                <p class="wf-sub">Beauty. Branding. Feminism. Let's talk about it.</p>
+                <div class="wf-btn">Listen to Pretty Critical →</div>
+                <div class="wf-img" style="--h:150px;margin:18px 0 0"><span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M4 18l5-5 4 4 3-3 4 4"/></svg>Illustration: "Empowerment?" and "Marketing?" stickers</span></div>
+              </section>
+
+              <section class="wf-sec" id="wf-b-podcast"><span class="n wf-n">2</span>
+                <p class="wf-eye">The Podcast</p>
+                <h2 class="wf-h2">Listen. Question. Rethink.</h2>
+                <div class="wf-lines"><i></i><i></i><i></i></div>
+                <div class="wf-box">
+                  <p class="wf-eye">Latest episode</p>
+                  <b>The plastic feminism of Barbie</b>
+                  <div class="wf-img" style="--h:84px;margin-bottom:14px"><span>Audio player</span></div>
+                  <div class="wf-lines" style="margin:0"><i></i><i></i></div>
+                </div>
+                <div class="wf-btn">Listen to the Latest Episode →</div>
+              </section>
+
+              <section class="wf-sec" id="wf-b-campaigns"><span class="n wf-n">3</span>
+                <p class="wf-eye">Anatomy of an Ad</p>
+                <h2 class="wf-h2">Look beyond the message. Decode the meaning.</h2>
+                <div class="wf-lines"><i></i><i></i><i></i></div>
+                <div class="wf-btn">Decode This Campaign →</div>
+                <div class="wf-gap"></div>
+                <div class="wf-img" style="--h:300px;margin-bottom:0"><span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M4 18l5-5 4 4 3-3 4 4"/></svg>Photo: ad poster with 4 hotspots</span>
+                  <i class="wf-hot" style="left:50%;top:30%">1</i><i class="wf-hot" style="left:18%;top:52%">2</i><i class="wf-hot" style="left:50%;top:84%">3</i><i class="wf-hot" style="left:82%;top:62%">4</i>
+                </div>
+                <p class="wf-micro">Tap a highlighted detail to unpack the message.</p>
+                <div class="wf-gap"></div>
+                <div class="wf-row">Representation<span class="go">→</span></div>
+                <div class="wf-row">Visual choices<span class="go">→</span></div>
+                <div class="wf-row">Language<span class="go">→</span></div>
+                <div class="wf-row" style="margin-bottom:0">Brand connection<span class="go">→</span></div>
+              </section>
+
+              <section class="wf-sec" id="wf-b-weekly-verdict"><span class="n wf-n">4</span>
+                <p class="wf-eye">The Weekly Verdict</p>
+                <h2 class="wf-h2">Empowerment or Exploitation? You decide.</h2>
+                <div class="wf-lines"><i></i><i></i><i></i></div>
+                <div class="wf-box">
+                  <b>How would you interpret this campaign's feminist message?</b>
+                  <div class="wf-row"><span class="r"></span>Genuine Empowerment</div>
+                  <div class="wf-row"><span class="r"></span>Commercialized Feminism</div>
+                  <div class="wf-row"><span class="r"></span>A Complicated Mix</div>
+                  <div class="wf-row"><span class="r"></span>Not Enough Information</div>
+                  <div class="wf-btn" style="margin-top:14px">Cast Your Vote →</div>
+                </div>
+              </section>
+
+              <section class="wf-sec" id="wf-b-join"><span class="n wf-n">5</span>
+                <p class="wf-eye">Join the Conversation · optional</p>
+                <h2 class="wf-h2">Your take. Your voice. Your verdict.</h2>
+                <div class="wf-lines"><i></i><i></i><i></i></div>
+                <div class="wf-btn two" style="margin:0">Join our Discord →</div>
+              </section>
+              <div data-foot></div>
+            </div>
+
+            <!-- ABOUT -->
+            <div class="wf-page" data-page="about" hidden>
+              <section class="wf-sec"><span class="n wf-n">1</span>
+                <p class="wf-eye">About</p>
+                <h1 class="wf-h1" style="margin:0">About Pretty Critical</h1>
+              </section>
+              <section class="wf-sec"><span class="n wf-n">2</span>
+                <div class="wf-img" style="--h:210px"><span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M4 18l5-5 4 4 3-3 4 4"/></svg>Photo: Grace, the host</span></div>
+                <p class="wf-eye">Hosted by Grace</p>
+                <div class="wf-lines"><i></i><i></i><i></i><i></i></div>
+                <div class="wf-lines"><i></i><i></i></div>
+                <div class="wf-lines" style="margin:0"><i></i><i></i><i></i></div>
+              </section>
+              <section class="wf-sec"><span class="n wf-n">3</span>
+                <div class="wf-box" style="margin:0"><p class="wf-eye">Pull quote</p><b style="margin:0">Not here to tell you what to buy or which brands to cancel.</b></div>
+              </section>
+              <section class="wf-sec"><span class="n wf-n">4</span>
+                <h2 class="wf-h2">Pretty Critical. Beauty. Branding. Feminism. Let's talk about it.</h2>
+                <div class="wf-btn" style="margin:0">Listen to Pretty Critical →</div>
+              </section>
+              <div data-foot></div>
+            </div>
+
+            <!-- FAQ -->
+            <div class="wf-page" data-page="faq" hidden>
+              <section class="wf-sec"><span class="n wf-n">1</span>
+                <p class="wf-eye">FAQ</p>
+                <h1 class="wf-h1" style="margin:0">Frequently Asked Questions</h1>
+              </section>
+              <section class="wf-sec wf-faq"><span class="n wf-n">2</span>
+                <details open><summary>What exactly is Pretty Critical?</summary><div class="wf-lines"><i></i><i></i><i></i></div></details>
+                <details><summary>What do you mean by feminist advertising?</summary><div class="wf-lines"><i></i><i></i></div></details>
+                <details><summary>Are you against beauty brands or buying beauty products?</summary><div class="wf-lines"><i></i><i></i></div></details>
+                <details><summary>How do you decide whether a campaign is empowering or exploitative?</summary><div class="wf-lines"><i></i><i></i><i></i></div></details>
+                <details><summary>Can I participate in the Weekly Verdict?</summary><div class="wf-lines"><i></i><i></i></div></details>
+              </section>
+              <div data-foot></div>
+            </div>
+
+          </div>
+          <div class="ph-home"></div>
+        </div>
+      </div>
+    </div>
+
+    <aside class="wf-right">
+      <p class="wf-label">Annotations</p>
+      <h2 id="wf-title">Home</h2>
+      <div class="wf-card">
+        <p>Numbered notes explain why each block is on the page and why it sits in that order.</p>
+        <button type="button" class="wf-btn" id="wf-ann-btn">Show annotations</button>
+      </div>
+      <ol class="wf-notes" id="wf-notes" hidden></ol>
+    </aside>
+  </div>
+
+  <template id="wf-foot-tpl">
+    <section class="wf-sec wf-foot" style="border-bottom:0">
+      <div class="wf-logo"><span class="ph-logo">LOGO</span>Pretty Critical</div>
+      <div class="wf-lines"><i></i><i></i></div>
+      <ul class="wf-links"><li>Home</li><li>Podcast</li><li>Campaigns</li><li>Weekly Verdict</li><li>About</li><li>FAQ</li></ul>
+      <div class="wf-field">Email address</div>
+      <div class="wf-btn two" style="margin-bottom:16px">Subscribe</div>
+      <p class="wf-micro" style="margin:0">© 2026 Pretty Critical</p>
+    </section>
+  </template>
+</div>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+/* ===== Edit these first ===== */
+const CONFIG = {
+  links: {
+    podcast: '',   // e.g. 'https://open.spotify.com/show/...'
+    discord: ''    // e.g. 'https://discord.gg/...'
+  },
+  // Hotspots on the ad (explanations are sample text in the host's voice: replace with Grace's own)
+  spots: [
+    { id:'rep',   label:'Representation',   q:'Who is included, excluded, or idealized?',
+      a:'Count the people in the frame, then ask who is missing. An ad can say "for every woman" and still show one kind of woman, polished to a shine.' },
+    { id:'vis',   label:'Visual choices',   q:'How do color, styling, and composition communicate femininity?',
+      a:'Soft pink, glossy finish, a perfectly centered pose. Notice how "feminine" gets translated into a palette, and how little of that palette has to do with the product itself.' },
+    { id:'lang',  label:'Language',         q:'What does the slogan suggest about women or empowerment?',
+      a:'"Be bold" sounds like a pep talk. Now read the line right under it: a shade name and a price. Confidence is the headline and the product is the punchline.' },
+    { id:'brand', label:'Brand connection', q:'How does the feminist message relate to the product being sold?',
+      a:'Try this test: does the message still make sense without the lipstick? If yes, the link is real. If not, empowerment might be doing the selling.' }
+  ],
+  poll: {
+    options: [
+      { id:'genuine',    label:'Genuine Empowerment',     sample:128 },
+      { id:'commercial', label:'Commercialized Feminism', sample:212 },
+      { id:'mix',        label:'A Complicated Mix',       sample:301 },
+      { id:'info',       label:'Not Enough Information',  sample:41 }
+    ]
+  }
+};
+
+(() => {
+  const $ = s => document.querySelector(s);
+  const $$ = s => [...document.querySelectorAll(s)];
+
+  /* ---- toast + external links ---- */
+  const toast = $('#toast'); let tt;
+  const say = msg => { toast.textContent = msg; toast.hidden = false; clearTimeout(tt); tt = setTimeout(() => toast.hidden = true, 2600); };
+  $$('[data-link]').forEach(el => {
+    const url = CONFIG.links[el.dataset.link];
+    if(url){ el.href = url; el.target = '_blank'; el.rel = 'noopener'; return; }
+    el.addEventListener('click', e => { e.preventDefault(); say('Add your '+el.dataset.link+' link in CONFIG.links, at the top of the script.'); });
+  });
+
+  /* ---- router: #home, #podcast, #campaigns, #weekly-verdict, #join, #about, #faq ---- */
+  const HOME_ANCHORS = ['podcast','campaigns','weekly-verdict','join'];
+  let booted = false;
+  function route(){
+    const h = (location.hash || '#home').slice(1);
+    const view = h === 'about' ? 'about' : h === 'faq' ? 'faq' : 'home';
+    ['home','about','faq'].forEach(v => $('#view-'+v).hidden = v !== view);
+    $$('nav.main a').forEach(a => a.setAttribute('aria-current', a.dataset.nav === (HOME_ANCHORS.includes(h) || view !== 'home' ? h : 'home') ? 'page' : 'false'));
+    $('#nav').classList.remove('open'); $('#burger').setAttribute('aria-expanded','false');
+    if(view === 'home' && HOME_ANCHORS.includes(h)) $('#'+h).scrollIntoView();
+    else if(booted || h !== 'home') window.scrollTo(0,0);
+    booted = true;
+  }
+  window.addEventListener('hashchange', route);
+  $$('a[href^="#"]:not([data-link])').forEach(a => a.addEventListener('click', () => { if(a.hash === location.hash) setTimeout(route,0); }));
+  $('#burger').onclick = () => { const o = $('#nav').classList.toggle('open'); $('#burger').setAttribute('aria-expanded', o); };
+
+  /* ---- episode waveform (decorative) ---- */
+  const wave = $('#wave');
+  for(let i=0;i<48;i++){ const b=document.createElement('i'); b.style.height = (18+Math.abs(Math.sin(i*.55)*60+Math.sin(i*1.7)*22))+'%'; wave.appendChild(b); }
+
+  /* ---- anatomy of an ad ---- */
+  const panel = $('#panel'), chips = $('#spot-chips');
+  let current = null;
+  CONFIG.spots.forEach((s,i) => {
+    const b = document.createElement('button'); b.type='button'; b.className='chip'; b.dataset.spot = s.id; b.textContent = (i+1)+' · '+s.label;
+    chips.appendChild(b);
+  });
+  function showSpot(id){
+    current = id;
+    $$('[data-spot]').forEach(el => el.setAttribute('aria-pressed', el.dataset.spot === id ? 'true' : 'false'));
+    panel.innerHTML = '';
+    if(!id){
+      panel.innerHTML = '<p class="micro"><b>Tap a highlighted detail to unpack the message.</b>Four details on the poster hide a question each. Start anywhere.</p>';
+      return;
+    }
+    const s = CONFIG.spots.find(x => x.id === id);
+    const q = document.createElement('p'); q.className='q'; q.textContent = s.label+': '+s.q;
+    const a = document.createElement('p'); a.className='a'; a.textContent = s.a;
+    const w = document.createElement('p'); w.className='who'; w.textContent = '— Grace';
+    panel.append(q,a,w);
+  }
+  $$('[data-spot]').forEach(el => el.addEventListener('click', () => showSpot(el.dataset.spot)));
+  $('#decode').onclick = () => { $('#lab').scrollIntoView({block:'start'}); showSpot(current || CONFIG.spots[0].id); };
+  showSpot(null);
+
+  /* ---- weekly verdict poll (demo data, nothing is stored) ---- */
+  const optsEl = $('#poll-opts');
+  CONFIG.poll.options.forEach(o => {
+    const l = document.createElement('label'); l.className='opt';
+    l.innerHTML = '<input type="radio" name="verdict"><span class="dot"></span><span></span>';
+    l.querySelector('input').value = o.id; l.lastChild.textContent = o.label;
+    optsEl.appendChild(l);
+  });
+  $('#poll').addEventListener('submit', e => {
+    e.preventDefault();
+    const pick = $('input[name=verdict]:checked');
+    $('#poll-err').hidden = !!pick;
+    if(!pick) return;
+    const counts = CONFIG.poll.options.map(o => ({...o, n:o.sample + (o.id === pick.value ? 1 : 0)}));
+    const total = counts.reduce((t,o) => t+o.n, 0);
+    const list = $('#res-list'); list.innerHTML = '';
+    counts.forEach(o => {
+      const pct = Math.round(o.n/total*100);
+      const li = document.createElement('li');
+      li.innerHTML = '<div class="top"><span class="nm"></span><span class="pc"></span></div><div class="bar"><i></i></div>';
+      li.querySelector('.nm').textContent = o.label;
+      if(o.id === pick.value){ const y = document.createElement('span'); y.className='you'; y.textContent='Your vote'; li.querySelector('.nm').appendChild(y); }
+      li.querySelector('.pc').textContent = pct+'%';
+      li.querySelector('i').style.width = pct+'%';
+      list.appendChild(li);
+    });
+    $('#res-total').textContent = total.toLocaleString('en-US')+' votes including yours';
+    $('#poll').hidden = true; $('#poll-res').hidden = false;
+  });
+  $('#revote').onclick = () => { $('#poll').reset(); $('#poll').hidden = false; $('#poll-res').hidden = true; };
+
+  /* ---- newsletter (demo only) ---- */
+  $('#news').addEventListener('submit', e => {
+    e.preventDefault();
+    const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($('#news-email').value.trim());
+    const m = $('#news-msg'); m.hidden = false;
+    m.textContent = ok ? 'Thanks! This is a demo, so nothing was sent.' : 'Please enter a valid email address.';
+  });
+
+  /* ---- wireframe viewer ---- */
+  const WF = {
+    home:{ title:'Home', notes:[
+      ['Hero','States the main question of the site and sets Grace\'s playful, conversational voice. One action only: listen.'],
+      ['The Podcast','The primary content comes first after the hero. A latest-episode card gives a reason to press play now.'],
+      ['Anatomy of an Ad','The hands-on feature. Visitors tap numbered areas of an ad to read short explanations from the host. On mobile it says "Tap", never "Hover".'],
+      ['The Weekly Verdict','Turns listening into participation. The options ask visitors to interpret a campaign, not to buy or boycott: a campaign\'s message and a purchase are separate questions.'],
+      ['Join the Conversation','Optional block. The first three blocks already meet the requirement of three or more homepage blocks.']
+    ]},
+    about:{ title:'About', notes:[
+      ['Page title','Names the site and the host straight away.'],
+      ['Host photo and intro','A face and a name make the host feel like a peer, not a lecturer. The intro asks the big question of the site.'],
+      ['Pull quote','States what the site is not: it will not tell visitors what to buy or which brands to cancel.'],
+      ['Closing tagline','Ends on the tagline and the same action as the homepage.']
+    ]},
+    faq:{ title:'FAQ', notes:[
+      ['Page title','Says plainly what the page is for.'],
+      ['Accordion','Questions are written the way visitors would ask them. Collapsed answers keep the page short on a phone, and the first one is open.']
+    ]}
+  };
+  const GO = {
+    home:{page:'home'}, podcast:{page:'home',block:'podcast'}, campaigns:{page:'home',block:'campaigns'},
+    'weekly-verdict':{page:'home',block:'weekly-verdict'}, join:{page:'home',block:'join'},
+    about:{page:'about'}, faq:{page:'faq'}
+  };
+  $$('[data-foot]').forEach(el => el.appendChild($('#wf-foot-tpl').content.cloneNode(true)));
+
+  function wfGo(key, writeHash){
+    const g = GO[key] || GO.home, d = WF[g.page];
+    $$('.wf-page').forEach(p => p.hidden = p.dataset.page !== g.page);
+    $$('[data-go]').forEach(b => b.setAttribute('aria-current', b.dataset.go === key ? 'page' : 'false'));
+    $('#wf-title').textContent = d.title;
+    const ol = $('#wf-notes'); ol.innerHTML = '';
+    d.notes.forEach((n,i) => {
+      const li = document.createElement('li');
+      li.innerHTML = '<span class="n"></span><div><b></b><p></p></div>';
+      li.querySelector('.n').textContent = i+1; li.querySelector('b').textContent = n[0]; li.querySelector('p').textContent = n[1];
+      ol.appendChild(li);
+    });
+    $('#ph-menu').classList.remove('open'); $('#ph-menu-btn').setAttribute('aria-expanded','false');
+    const scr = $('#wf-screen');
+    if(g.block) scr.scrollTo({top: Math.max(0, $('#wf-b-'+g.block).offsetTop - 2)}); else scr.scrollTo({top:0});
+    if(writeHash && location.hash !== '#'+key) location.hash = '#'+key;
+  }
+  function wfFromHash(){ const h = (location.hash || '#home').slice(1); wfGo(GO[h] ? h : 'home', false); }
+  document.addEventListener('click', e => { const b = e.target.closest('[data-go]'); if(b) wfGo(b.dataset.go, true); });
+  $('#ph-menu-btn').onclick = () => { const o = $('#ph-menu').classList.toggle('open'); $('#ph-menu-btn').setAttribute('aria-expanded', o); };
+
+  function setAnn(on){
+    $('#wf').classList.toggle('ann', on);
+    $('#wf-ann-toggle').checked = on;
+    $('#wf-notes').hidden = !on;
+    $('#wf-ann-btn').textContent = on ? 'Hide annotations' : 'Show annotations';
+  }
+  $('#wf-ann-toggle').onchange = e => setAnn(e.target.checked);
+  $('#wf-ann-btn').onclick = () => setAnn(!$('#wf').classList.contains('ann'));
+
+  /* ---- design mode + UX notes ---- */
+  function setMode(m){
+    document.body.dataset.mode = m;
+    $$('button[data-mode]').forEach(x => x.setAttribute('aria-pressed', x.dataset.mode === m ? 'true' : 'false'));
+    window.scrollTo(0,0);
+    if(m === 'wire') wfFromHash(); else route();
+  }
+  document.body.dataset.mode = 'final';
+  $$('button[data-mode]').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode === 'wire' ? 'wire' : 'final')));
+  $('#notes-btn').onclick = () => {
+    const on = document.body.classList.toggle('notes');
+    $('#notes-btn').setAttribute('aria-pressed', on);
+    $('#notes-label').textContent = on ? 'Hide UX notes' : 'Show UX notes';
+  };
+
+  route();
+})();
+</script>
+</body>
+</html>
